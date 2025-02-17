@@ -21,6 +21,7 @@ use craft\services\Fields;
 use craft\services\Plugins;
 use craft\web\UrlManager;
 use craft\web\twig\variables\CraftVariable;
+use doublesecretagency\adwizard\models\Settings;
 use doublesecretagency\adwizard\fields\Ads as AdsField;
 use doublesecretagency\adwizard\fields\AdGroups as AdGroupsField;
 use doublesecretagency\adwizard\services\AdGroups;
@@ -179,4 +180,11 @@ class AdWizard extends Plugin
         return $item;
     }
 
+    /**
+     * @inheritdoc
+     */
+    protected function createSettingsModel(): Settings
+    {
+        return new Settings();
+    }
 }

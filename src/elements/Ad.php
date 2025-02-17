@@ -32,6 +32,7 @@ use doublesecretagency\adwizard\elements\actions\ChangeAdGroup;
 use doublesecretagency\adwizard\elements\db\AdQuery;
 use doublesecretagency\adwizard\models\AdGroup;
 use doublesecretagency\adwizard\records\Ad as AdRecord;
+use doublesecretagency\adwizard\models\Settings;
 use Exception;
 use Throwable;
 use Twig\Markup;
@@ -57,9 +58,9 @@ class Ad extends Element
     public ?int $assetId = null;
 
     /**
-     * @var string $url URL of ad target.
+     * @var string | null $url URL of ad target.
      */
-    public string $url = '';
+    public ?string $url = null;
 
     /**
      * @var DateTime|null $startDate Date ad will begin its run.
@@ -160,6 +161,9 @@ class Ad extends Element
      */
     protected static function defineSources(string $context): array
     {
+        /* @var Settings $settings */
+        $settings = AdWizard::$plugin->getSettings();
+
         // "All ads"
         $sources = [
             [
@@ -167,7 +171,7 @@ class Ad extends Element
                 'label'     => Craft::t('ad-wizard', 'All ads'),
                 'data'      => ['handle' => ''],
                 'criteria'  => ['status' => null],
-                'hasThumbs' => true
+                'hasThumbs' => $settings->enableAdImages,
             ]
         ];
 
@@ -178,7 +182,7 @@ class Ad extends Element
                 'label'     => Craft::t('site', $group->name),
                 'data'      => ['handle' => $group->handle],
                 'criteria'  => ['groupId' => $group->id],
-                'hasThumbs' => true
+                'hasThumbs' => $settings->enableAdImages,
             ];
         }
 
@@ -219,7 +223,13 @@ class Ad extends Element
      */
     protected static function defineSearchableAttributes(): array
     {
-        return ['title', 'url'];
+        $attributes = ['title'];
+
+        if (AdWizard::$plugin->getSettings()->enableAdUrls) {
+            $attributes[] = 'url';
+        }
+
+        return $attributes;
     }
 
     /**
@@ -227,15 +237,20 @@ class Ad extends Element
      */
     protected static function defineSortOptions(): array
     {
-        return [
+        $options = [
             'title'       => Craft::t('app', 'Title'),
-            'url'         => Craft::t('app', 'URL'),
             'startDate'   => Craft::t('ad-wizard', 'Start Date'),
             'endDate'     => Craft::t('ad-wizard', 'End Date'),
             'maxViews'    => Craft::t('ad-wizard', 'Max Views'),
             'totalClicks' => Craft::t('ad-wizard', 'Total Clicks'),
             'totalViews'  => Craft::t('ad-wizard', 'Total Views'),
         ];
+
+        if (AdWizard::$plugin->getSettings()->enableAdUrls) {
+            $options['url'] = Craft::t('app', 'URL');
+        }
+
+        return $options;
     }
 
     /**
@@ -254,6 +269,10 @@ class Ad extends Element
             'totalViews'  => ['label' => Craft::t('ad-wizard', 'Total Views')],
         ];
 
+        if (!AdWizard::$plugin->getSettings()->enableAdUrls) {
+            array_unshift($attributes, 'url');
+        }
+
         return $attributes;
     }
 
@@ -262,7 +281,7 @@ class Ad extends Element
      */
     protected static function defineDefaultTableAttributes(string $source): array
     {
-        return [
+        $attributes = [
             'url',
             'group',
             'startDate',
@@ -271,6 +290,12 @@ class Ad extends Element
             'totalClicks',
             'totalViews',
         ];
+
+        if (!AdWizard::$plugin->getSettings()->enableAdUrls) {
+            array_unshift($attributes, 'url');
+        }
+
+        return $attributes;
     }
 
     /**
@@ -280,7 +305,9 @@ class Ad extends Element
     {
         $rules = parent::defineRules();
 
-        $rules[] = [['url'], 'required'];
+        if (AdWizard::$plugin->getSettings()->enableAdUrls) {
+            $rules[] = [['url'], 'required'];
+        }
 
         return $rules;
     }
@@ -327,6 +354,10 @@ class Ad extends Element
      */
     public function getThumbUrl(int $size): ?string
     {
+        if (!AdWizard::$plugin->getSettings()->enableAdImages) {
+            return null;
+        }
+
         // If no asset ID, bail
         if (!$this->assetId) {
             return $this->_defaultThumb();
