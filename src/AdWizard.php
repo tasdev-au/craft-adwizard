@@ -65,7 +65,7 @@ class AdWizard extends Plugin
     /**
      * @var bool $schemaVersion Current schema version of the plugin.
      */
-    public string $schemaVersion = '2.1.0';
+    public string $schemaVersion = '2.1.1';
 
     /**
      * @inheritdoc
