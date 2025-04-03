@@ -55,7 +55,7 @@ class Install extends Migration
             'id'          => $this->integer()->notNull(),
             'groupId'     => $this->integer()->notNull(),
             'assetId'     => $this->integer(),
-            'url'         => $this->text()->notNull(),
+            'url'         => $this->text()->null(),
             'startDate'   => $this->dateTime(),
             'endDate'     => $this->dateTime(),
             'maxViews'    => $this->integer()->defaultValue(0),
